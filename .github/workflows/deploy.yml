@@ -1,0 +1,40 @@
+name: Deploy
+
+# Deploys the Worker to Cloudflare on push to main (CI already gated the PR).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-worker
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 'lts/*'
+          cache: npm
+
+      - run: npm ci
+
+      # Ensure the Prisma client is generated even if postinstall was skipped.
+      - name: Generate Prisma client
+        run: npm run prisma:generate
+
+      # Lint/typecheck/test already ran on the PR (see ci.yml); main is
+      # protected, so code reaching here is validated. We only ship.
+      - name: Deploy to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Apply any pending D1 migrations before the new code goes live.
+          preCommands: npx wrangler d1 migrations apply wow-forever-bot-db --remote

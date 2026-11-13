@@ -147,3 +147,23 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Wrangler / Cloudflare local state
+.wrangler/
+.dev.vars
+
+# Local D1 / SQLite databases
+*.sqlite
+*.sqlite3
+*.db
+!*.db.example
+
+# Generated Cloudflare types
+worker-configuration.d.ts
+
+# Prisma generated client (regenerated via postinstall)
+src/generated/
+
+# Local Prisma CLI SQLite file
+prisma/db.sqlite
+prisma/*.sqlite

@@ -1,0 +1,5 @@
+# Local dev secrets for `wrangler dev`. Copy to `.dev.vars` and fill in.
+# `.dev.vars` is gitignored. These mirror the values in your .env.
+BATTLE_NET_CLIENT_ID="your-client-id"
+BATTLE_NET_CLIENT_SECRET="your-client-secret"
+DISCORD_WEBHOOK="https://discord.com/api/webhooks/xxx/yyy"

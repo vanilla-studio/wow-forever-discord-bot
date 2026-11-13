@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  runtime  = "cloudflare"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// Characters we follow. The Discord bot will later write into this table too.
+model Character {
+  id        Int      @id @default(autoincrement())
+  // Lowercase "{name}-{surname}" slug used by the Forever API (realmless).
+  slug      String
+  region    String   @default("eu")
+  // Who asked to follow this character (Discord user id, once the bot exists).
+  addedBy   String?  @map("added_by")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  snapshots Snapshot[]
+  events    Event[]
+
+  @@unique([slug, region])
+  @@map("characters")
+}
+
+// The character state captured at each fetch.
+model Snapshot {
+  id          Int       @id @default(autoincrement())
+  characterId Int       @map("character_id")
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  // Cheap scalar fields we diff directly.
+  level             Int
+  equippedItemLevel Int  @default(0) @map("equipped_item_level")
+  achievementPoints Int  @default(0) @map("achievement_points")
+  achievementCount  Int  @default(0) @map("achievement_count")
+  lastLoginTimestamp Int? @map("last_login_timestamp")
+
+  // Richer structures we diff by shape, stored as JSON text.
+  professionsJson     String? @map("professions_json")
+  specializationsJson String? @map("specializations_json")
+  achievementsJson    String? @map("achievements_json")
+  titlesJson          String? @map("titles_json")
+
+  fetchedAt DateTime @default(now()) @map("fetched_at")
+
+  @@index([characterId, fetchedAt])
+  @@map("snapshots")
+}
+
+// Announcements already published (dedupe guard).
+model Event {
+  id          Int       @id @default(autoincrement())
+  characterId Int       @map("character_id")
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  // e.g. "level-up", "profession-tier", "achievement", "title", "item-level".
+  type String
+  // Stable identity of the specific event so we never announce it twice,
+  // e.g. "level-up:29" or "achievement:61502".
+  dedupeKey String  @map("dedupe_key")
+  // Human-readable line we posted, kept for debugging.
+  message   String?
+
+  publishedAt DateTime @default(now()) @map("published_at")
+
+  @@unique([characterId, dedupeKey])
+  @@map("events")
+}
+
+// OAuth token cache — one row per region, Blizzard client-credentials token.
+model OauthToken {
+  region      String   @id
+  accessToken String   @map("access_token")
+  expiresAt   DateTime @map("expires_at")
+
+  @@map("oauth_tokens")
+}
