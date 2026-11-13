@@ -19,8 +19,7 @@
     {
       "binding": "DB",
       "database_name": "wow-forever-bot-db",
-      // Replaced with the real id after `wrangler d1 create wow-forever-bot-db`.
-      "database_id": "REPLACE_WITH_DATABASE_ID",
+      "database_id": "c2209c09-fe49-4a74-a1d4-d7c0c96e3d7d",
       "migrations_dir": "prisma/migrations"
     }
   ],
