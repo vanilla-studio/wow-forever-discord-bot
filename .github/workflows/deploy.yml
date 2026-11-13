@@ -32,7 +32,7 @@ jobs:
       # Lint/typecheck/test already ran on the PR (see ci.yml); main is
       # protected, so code reaching here is validated. We only ship.
       - name: Deploy to Cloudflare
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
