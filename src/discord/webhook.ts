@@ -1,9 +1,10 @@
 export interface DiscordEmbed {
   author?: { name: string };
   title?: string;
-  description: string;
+  description?: string;
   color?: number;
   thumbnail?: { url: string };
+  fields?: Array<{ name: string; value: string; inline?: boolean }>;
   footer?: { text: string };
   timestamp?: string;
 }
