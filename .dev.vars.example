@@ -1,5 +1,16 @@
 # Local dev secrets for `wrangler dev`. Copy to `.dev.vars` and fill in.
-# `.dev.vars` is gitignored. These mirror the values in your .env.
+# `.dev.vars` is gitignored.
+
+# Blizzard Battle.net API (client-credentials flow).
 BATTLE_NET_CLIENT_ID="your-client-id"
 BATTLE_NET_CLIENT_SECRET="your-client-secret"
+
+# Discord channel webhook used to publish the hourly recaps.
 DISCORD_WEBHOOK="https://discord.com/api/webhooks/xxx/yyy"
+
+# Discord application (interactive bot). From discord.com/developers/applications
+DISCORD_APP_ID="your-application-id"
+DISCORD_APP_PUBLIC_KEY="your-public-key"
+DISCORD_APP_TOKEN="your-bot-token"
+# Server to register the slash commands into (right-click server -> Copy Server ID).
+DISCORD_GUILD_ID="your-guild-id"

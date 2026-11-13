@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
+    "discord:register": "node --env-file=.dev.vars scripts/register-commands.ts",
     "db:migrate:local": "wrangler d1 migrations apply wow-forever-bot-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply wow-forever-bot-db --remote",
     "db:seed:local": "wrangler d1 execute wow-forever-bot-db --local --file=./prisma/seed.sql",
@@ -29,6 +30,7 @@
   },
   "dependencies": {
     "@prisma/adapter-d1": "^7.10.1",
-    "@prisma/client": "^7.10.1"
+    "@prisma/client": "^7.10.1",
+    "discord-interactions": "^4.4.0"
   }
 }
