@@ -10,6 +10,8 @@ interface KeyRef {
 export interface CharacterProfile {
   id: number;
   name: string;
+  // Forever characters are realmless and carry a surname instead.
+  surname?: string;
   level: number;
   achievement_points: number;
   average_item_level: number;

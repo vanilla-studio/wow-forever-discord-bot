@@ -1,4 +1,5 @@
 // Minimal Discord interaction typings — only the fields we read.
+import type { DiscordEmbed } from './webhook';
 
 export const InteractionType = {
   PING: 1,
@@ -79,6 +80,14 @@ export function ephemeralReply(content: string) {
   return Response.json({
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: { content, flags: EPHEMERAL },
+  });
+}
+
+/** Builds an embed response. Ephemeral embeds are seen only by the caller. */
+export function embedReply(embed: DiscordEmbed, ephemeral = false) {
+  return Response.json({
+    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+    data: { embeds: [embed], ...(ephemeral ? { flags: EPHEMERAL } : {}) },
   });
 }
 

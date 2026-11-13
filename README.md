@@ -41,7 +41,8 @@ src/
   discord/
     webhook.ts        Posts embeds (hourly recaps)
     interactions.ts   Interaction types, permission checks, reply helpers
-    commands.ts       /follow /unfollow /list /check handlers
+    commands.ts       /follow /unfollow /list /check handlers (rich embeds)
+    colors.ts         Shared embed palette + faction colors
     slug.ts           Normalizes "Name Surname" into the API slug
   events/
     detect.ts         Diffs two snapshots into a list of events
