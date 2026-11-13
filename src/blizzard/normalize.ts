@@ -42,7 +42,18 @@ export interface NormalizedCharacter {
   activeSpec?: NormalizedSpec;
   achievements: NormalizedAchievement[];
   titles: NormalizedTitle[];
+  // New in the extended event set.
+  guild?: string;
+  epicCount: number;
+  totalDeaths: number;
+  fallingDeaths: number;
+  questsCompleted: number;
 }
+
+// Blizzard statistic ids (stable across characters).
+const STAT_TOTAL_DEATHS = 60;
+const STAT_FALLING_DEATHS = 114;
+const STAT_QUESTS_COMPLETED = 98;
 
 export function normalize(data: CharacterData): NormalizedCharacter {
   return {
@@ -55,7 +66,37 @@ export function normalize(data: CharacterData): NormalizedCharacter {
     activeSpec: normalizeActiveSpec(data),
     achievements: normalizeAchievements(data),
     titles: normalizeTitles(data),
+    guild: data.profile.guild?.name,
+    epicCount: countEpics(data),
+    totalDeaths: statValue(data, STAT_TOTAL_DEATHS),
+    fallingDeaths: statValue(data, STAT_FALLING_DEATHS),
+    questsCompleted: statValue(data, STAT_QUESTS_COMPLETED),
   };
+}
+
+/** Number of equipped EPIC-quality items. */
+function countEpics(data: CharacterData): number {
+  return (data.equipment.equipped_items ?? []).filter((i) => i.quality?.type === 'EPIC').length;
+}
+
+/** Reads a flat statistic value by id, walking nested categories. 0 if absent. */
+function statValue(data: CharacterData, id: number): number {
+  const categories = data.statistics.categories ?? [];
+  const stack = [...categories];
+  while (stack.length > 0) {
+    const cat = stack.pop();
+    if (!cat) {
+      continue;
+    }
+    const hit = cat.statistics?.find((s) => s.id === id);
+    if (hit) {
+      return Math.floor(hit.quantity);
+    }
+    if (cat.sub_categories) {
+      stack.push(...cat.sub_categories);
+    }
+  }
+  return 0;
 }
 
 function normalizeProfessions(data: CharacterData): NormalizedProfession[] {

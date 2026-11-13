@@ -24,6 +24,11 @@ function baseState(overrides: Partial<NormalizedCharacter> = {}): NormalizedChar
     activeSpec: { id: 574, name: 'Balance', spentPoints: 4 },
     achievements: [{ id: 61502, name: 'Novice Druid', completedTimestamp: 1794341580000 }],
     titles: [],
+    guild: undefined,
+    epicCount: 0,
+    totalDeaths: 0,
+    fallingDeaths: 0,
+    questsCompleted: 0,
     ...overrides,
   };
 }
@@ -105,5 +110,73 @@ describe('detectEvents', () => {
     const titles = detectEvents(previous, current).filter((e) => e.type === 'title');
     expect(titles).toHaveLength(1);
     expect(titles[0].data.name).toBe('the Explorer');
+  });
+
+  it('announces item level only when it climbs by the step or more', () => {
+    expect(
+      detectEvents(
+        baseState({ equippedItemLevel: 18 }),
+        baseState({ equippedItemLevel: 20 }),
+      ).filter((e) => e.type === 'item-level'),
+    ).toHaveLength(0); // +2 < step(3)
+    const jumped = detectEvents(
+      baseState({ equippedItemLevel: 18 }),
+      baseState({ equippedItemLevel: 22 }),
+    ).filter((e) => e.type === 'item-level');
+    expect(jumped).toHaveLength(1); // +4 >= step
+    expect(jumped[0].data.to).toBe(22);
+  });
+
+  it('announces the first epic once', () => {
+    const events = detectEvents(baseState({ epicCount: 0 }), baseState({ epicCount: 1 }));
+    expect(events.filter((e) => e.type === 'first-epic')).toHaveLength(1);
+    // Going 1 -> 2 epics is not a "first".
+    expect(
+      detectEvents(baseState({ epicCount: 1 }), baseState({ epicCount: 2 })).filter(
+        (e) => e.type === 'first-epic',
+      ),
+    ).toHaveLength(0);
+  });
+
+  it('announces a spec change', () => {
+    const events = detectEvents(
+      baseState({ activeSpec: { id: 574, name: 'Balance', spentPoints: 10 } }),
+      baseState({ activeSpec: { id: 134, name: 'Feral Combat', spentPoints: 10 } }),
+    ).filter((e) => e.type === 'spec-change');
+    expect(events).toHaveLength(1);
+    expect(events[0].data).toMatchObject({ from: 'Balance', to: 'Feral Combat' });
+  });
+
+  it('detects joining, leaving and switching guilds', () => {
+    const joined = detectEvents(baseState({ guild: undefined }), baseState({ guild: 'The Horde' }));
+    expect(joined.find((e) => e.type === 'guild-change')?.data).toMatchObject({ to: 'The Horde' });
+
+    const left = detectEvents(baseState({ guild: 'The Horde' }), baseState({ guild: undefined }));
+    expect(left.find((e) => e.type === 'guild-change')?.data).toMatchObject({ from: 'The Horde' });
+  });
+
+  it('announces death milestones every 10 crossed', () => {
+    const events = detectEvents(
+      baseState({ totalDeaths: 8 }),
+      baseState({ totalDeaths: 23 }),
+    ).filter((e) => e.type === 'deaths');
+    expect(events.map((e) => e.data.count)).toEqual([10, 20]);
+  });
+
+  it('announces every new falling death', () => {
+    const events = detectEvents(
+      baseState({ fallingDeaths: 1 }),
+      baseState({ fallingDeaths: 2 }),
+    ).filter((e) => e.type === 'falling-death');
+    expect(events).toHaveLength(1);
+    expect(events[0].data.count).toBe(2);
+  });
+
+  it('announces quest milestones every 100 crossed', () => {
+    const events = detectEvents(
+      baseState({ questsCompleted: 95 }),
+      baseState({ questsCompleted: 242 }),
+    ).filter((e) => e.type === 'quests');
+    expect(events.map((e) => e.data.count)).toEqual([100, 200]);
   });
 });

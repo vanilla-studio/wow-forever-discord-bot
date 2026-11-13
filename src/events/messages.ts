@@ -1,4 +1,4 @@
-import type { DetectedEvent, EventType } from './detect';
+import type { DetectedEvent } from './detect';
 
 // Sharp, dry one-liners. The character name lives in the embed title, so the
 // lines here never repeat it — they just describe what happened, with bite.
@@ -34,12 +34,49 @@ const TITLE = [
   '👔 New title: **{x}**. Insufferable in the best way.',
 ];
 
-const POOLS: Record<Exclude<EventType, 'level-up'>, string[]> = {
-  'profession-tier': PROFESSION_TIER,
-  achievement: ACHIEVEMENT,
-  title: TITLE,
-  'item-level': [],
-};
+const ITEM_LEVEL = [
+  '🛡️ Gear check: item level up to **{to}**. Looking less like a vendor reject.',
+  '💪 Item level **{to}** now (+{gain}). The drip is drizzling.',
+];
+
+const FIRST_EPIC = [
+  '🟣 **FIRST EPIC EQUIPPED.** Purple pixels. We are not worthy. (We are, slightly.)',
+  '🟣 A wild **EPIC** appears — equipped and flexed. Frame this moment.',
+];
+
+const SPEC_CHANGE = [
+  '🌀 Respecced from **{from}** to **{to}**. The trainer sends their regards and an invoice.',
+  '🔀 New spec: **{to}** (was {from}). Commitment issues, but make it talents.',
+];
+
+const GUILD_JOIN = [
+  '🚪 Joined the guild **{to}**. Fresh meat for the roster.',
+  '🤝 Now flying the **{to}** tabard. Welcome aboard.',
+];
+
+const GUILD_LEAVE = [
+  '🚪 Left **{from}**. Gone to find themselves, or just better loot rules.',
+  '👋 No longer repping **{from}**. Guildless and free.',
+];
+
+const GUILD_SWITCH = ['🔁 Jumped ship from **{from}** to **{to}**. Loyalty is a spectrum.'];
+
+const DEATHS = [
+  '💀 Reached **{count} deaths**. A connoisseur of the respawn screen.',
+  '⚰️ **{count} deaths** and counting. The spirit healer knows them by name.',
+  '🪦 Death #**{count}**. Azeroth remains undefeated.',
+];
+
+const FALLING_DEATH = [
+  '🪂 Died from fall damage. Again. Gravity: {count} — common sense: 0.',
+  '🧗 Another **falling death** (#{count}). The ground said hello.',
+  '⛰️ Learned — once more — that cliffs are not shortcuts. Falling deaths: **{count}**.',
+];
+
+const QUESTS = [
+  '📜 Completed **{count} quests**. The errand boy of Azeroth marches on.',
+  '✅ **{count} quests** done. Someone really reads all that yellow text.',
+];
 
 function pick(pool: string[]): string {
   return pool[Math.floor(Math.random() * pool.length)];
@@ -62,6 +99,35 @@ export function renderLine(event: DetectedEvent): string {
       return fill(pick(ACHIEVEMENT), { x: event.data.name as string });
     case 'title':
       return fill(pick(TITLE), { x: event.data.name as string });
+    case 'item-level': {
+      const to = event.data.to as number;
+      const from = event.data.from as number;
+      return fill(pick(ITEM_LEVEL), { to: String(to), gain: String(to - from) });
+    }
+    case 'first-epic':
+      return pick(FIRST_EPIC);
+    case 'spec-change':
+      return fill(pick(SPEC_CHANGE), {
+        from: event.data.from as string,
+        to: event.data.to as string,
+      });
+    case 'guild-change': {
+      const from = event.data.from as string | undefined;
+      const to = event.data.to as string | undefined;
+      if (from && to) {
+        return fill(pick(GUILD_SWITCH), { from, to });
+      }
+      if (to) {
+        return fill(pick(GUILD_JOIN), { to });
+      }
+      return fill(pick(GUILD_LEAVE), { from: from ?? 'their guild' });
+    }
+    case 'deaths':
+      return fill(pick(DEATHS), { count: String(event.data.count) });
+    case 'falling-death':
+      return fill(pick(FALLING_DEATH), { count: String(event.data.count) });
+    case 'quests':
+      return fill(pick(QUESTS), { count: String(event.data.count) });
     default:
       return '• Did something noteworthy.';
   }
@@ -99,9 +165,6 @@ export function renderRecapLines(events: DetectedEvent[]): string[] {
 
   return lines;
 }
-
-// Re-export so callers can reference the pool table if needed.
-export { POOLS };
 
 function fill(template: string, vars: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (_, key: string) => vars[key] ?? `{${key}}`);

@@ -1,7 +1,9 @@
 import type {
   AchievementsResponse,
+  AchievementsStatisticsResponse,
   CharacterMediaResponse,
   CharacterProfile,
+  EquipmentResponse,
   ProfessionsResponse,
   SpecializationsResponse,
   TitlesResponse,
@@ -14,6 +16,8 @@ export interface CharacterData {
   achievements: AchievementsResponse;
   titles: TitlesResponse;
   media: CharacterMediaResponse;
+  equipment: EquipmentResponse;
+  statistics: AchievementsStatisticsResponse;
 }
 
 export class BlizzardClient {
@@ -41,13 +45,18 @@ export class BlizzardClient {
 
     // Sub-endpoints can lag behind the profile (media especially), so a 404
     // here is non-fatal — we fall back to empty shapes and diff what we have.
-    const [professions, specializations, achievements, titles, media] = await Promise.all([
-      this.get<ProfessionsResponse>(`/profile/wow/character/${slug}/professions`),
-      this.get<SpecializationsResponse>(`/profile/wow/character/${slug}/specializations`),
-      this.get<AchievementsResponse>(`/profile/wow/character/${slug}/achievements`),
-      this.get<TitlesResponse>(`/profile/wow/character/${slug}/titles`),
-      this.get<CharacterMediaResponse>(`/profile/wow/character/${slug}/character-media`),
-    ]);
+    const [professions, specializations, achievements, titles, media, equipment, statistics] =
+      await Promise.all([
+        this.get<ProfessionsResponse>(`/profile/wow/character/${slug}/professions`),
+        this.get<SpecializationsResponse>(`/profile/wow/character/${slug}/specializations`),
+        this.get<AchievementsResponse>(`/profile/wow/character/${slug}/achievements`),
+        this.get<TitlesResponse>(`/profile/wow/character/${slug}/titles`),
+        this.get<CharacterMediaResponse>(`/profile/wow/character/${slug}/character-media`),
+        this.get<EquipmentResponse>(`/profile/wow/character/${slug}/equipment`),
+        this.get<AchievementsStatisticsResponse>(
+          `/profile/wow/character/${slug}/achievements/statistics`,
+        ),
+      ]);
 
     return {
       profile,
@@ -56,6 +65,8 @@ export class BlizzardClient {
       achievements: achievements ?? { total_quantity: 0, total_points: 0 },
       titles: titles ?? {},
       media: media ?? {},
+      equipment: equipment ?? {},
+      statistics: statistics ?? {},
     };
   }
 
