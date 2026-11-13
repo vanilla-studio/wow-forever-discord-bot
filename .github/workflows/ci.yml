@@ -1,0 +1,34 @@
+name: CI
+
+# The quality gate: lint, typecheck and test. Runs on feature branches and on
+# PRs into main. Protect `main` to require this check before merging, so the
+# Deploy workflow can trust whatever lands on main.
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 'lts/*'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
