@@ -1,6 +1,17 @@
 import type { NormalizedCharacter } from '../blizzard/normalize';
 
-export type EventType = 'level-up' | 'profession-tier' | 'achievement' | 'title' | 'item-level';
+export type EventType =
+  | 'level-up'
+  | 'profession-tier'
+  | 'achievement'
+  | 'title'
+  | 'item-level'
+  | 'first-epic'
+  | 'spec-change'
+  | 'guild-change'
+  | 'deaths'
+  | 'falling-death'
+  | 'quests';
 
 export interface DetectedEvent {
   type: EventType;
@@ -80,5 +91,86 @@ export function detectEvents(
     }
   }
 
+  // Item level climbed by a meaningful amount (avoids spamming every piece).
+  const ilvlGain = current.equippedItemLevel - previous.equippedItemLevel;
+  if (ilvlGain >= ITEM_LEVEL_STEP) {
+    events.push({
+      type: 'item-level',
+      dedupeKey: `item-level:${current.equippedItemLevel}`,
+      data: { from: previous.equippedItemLevel, to: current.equippedItemLevel },
+    });
+  }
+
+  // First epic ever equipped — a one-off celebratory moment.
+  if (previous.epicCount === 0 && current.epicCount > 0) {
+    events.push({ type: 'first-epic', dedupeKey: 'first-epic', data: {} });
+  }
+
+  // Spec change (main spec id changed).
+  if (
+    previous.activeSpec &&
+    current.activeSpec &&
+    previous.activeSpec.id !== current.activeSpec.id
+  ) {
+    events.push({
+      type: 'spec-change',
+      dedupeKey: `spec-change:${current.activeSpec.id}`,
+      data: { from: previous.activeSpec.name, to: current.activeSpec.name },
+    });
+  }
+
+  // Guild change (joined, left, or switched).
+  if ((previous.guild ?? '') !== (current.guild ?? '')) {
+    events.push({
+      type: 'guild-change',
+      dedupeKey: `guild-change:${current.guild ?? 'none'}`,
+      data: { from: previous.guild, to: current.guild },
+    });
+  }
+
+  // Death-count milestones (every DEATH_STEP deaths).
+  for (const milestone of milestonesCrossed(
+    previous.totalDeaths,
+    current.totalDeaths,
+    DEATH_STEP,
+  )) {
+    events.push({ type: 'deaths', dedupeKey: `deaths:${milestone}`, data: { count: milestone } });
+  }
+
+  // A new falling death (every single one — too funny to batch).
+  if (current.fallingDeaths > previous.fallingDeaths) {
+    events.push({
+      type: 'falling-death',
+      dedupeKey: `falling-death:${current.fallingDeaths}`,
+      data: { count: current.fallingDeaths },
+    });
+  }
+
+  // Quest-completion milestones (every QUEST_STEP quests).
+  for (const milestone of milestonesCrossed(
+    previous.questsCompleted,
+    current.questsCompleted,
+    QUEST_STEP,
+  )) {
+    events.push({ type: 'quests', dedupeKey: `quests:${milestone}`, data: { count: milestone } });
+  }
+
   return events;
+}
+
+const ITEM_LEVEL_STEP = 3;
+const DEATH_STEP = 10;
+const QUEST_STEP = 100;
+
+/**
+ * Returns the milestone values of `step` strictly above `from` and at most `to`.
+ * E.g. from=8, to=23, step=10 -> [10, 20]. Empty when nothing new is crossed.
+ */
+function milestonesCrossed(from: number, to: number, step: number): number[] {
+  const out: number[] = [];
+  const first = Math.floor(from / step) * step + step;
+  for (let m = first; m <= to; m += step) {
+    out.push(m);
+  }
+  return out;
 }

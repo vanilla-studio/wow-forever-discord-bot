@@ -38,6 +38,11 @@ model Snapshot {
   achievementPoints Int  @default(0) @map("achievement_points")
   achievementCount  Int  @default(0) @map("achievement_count")
   lastLoginTimestamp Int? @map("last_login_timestamp")
+  guild             String? @map("guild")
+  epicCount         Int  @default(0) @map("epic_count")
+  totalDeaths       Int  @default(0) @map("total_deaths")
+  fallingDeaths     Int  @default(0) @map("falling_deaths")
+  questsCompleted   Int  @default(0) @map("quests_completed")
 
   // Richer structures we diff by shape, stored as JSON text.
   professionsJson     String? @map("professions_json")

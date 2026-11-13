@@ -20,6 +20,8 @@ export interface CharacterProfile {
   character_class: KeyRef;
   race: KeyRef;
   faction: { type: string; name: string };
+  // Present only when the character is in a guild.
+  guild?: { name: string; id: number };
 }
 
 export interface ProfessionsResponse {
@@ -69,4 +71,31 @@ export interface TitlesResponse {
 
 export interface CharacterMediaResponse {
   assets?: Array<{ key: string; value: string }>;
+}
+
+export interface EquipmentResponse {
+  equipped_items?: Array<{
+    slot: { type: string; name: string };
+    quality: { type: string; name: string };
+    name: string;
+  }>;
+}
+
+// achievements/statistics: nested categories, each with statistics and
+// sub-categories. We flatten and read by statistic id.
+export interface StatisticEntry {
+  id: number;
+  name: string;
+  // Present when the statistic is a "which X has the most" label.
+  description?: string;
+  quantity: number;
+}
+
+export interface StatisticsCategory {
+  statistics?: StatisticEntry[];
+  sub_categories?: StatisticsCategory[];
+}
+
+export interface AchievementsStatisticsResponse {
+  categories?: StatisticsCategory[];
 }
