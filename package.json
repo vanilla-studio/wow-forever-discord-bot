@@ -20,13 +20,13 @@
     "db:studio": "prisma studio"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.7",
-    "@cloudflare/workers-types": "^5.20261110.1",
+    "@biomejs/biome": "^2.6.8",
+    "@cloudflare/workers-types": "^5.20261120.1",
     "dotenv": "^18.0.10",
     "prisma": "^7.10.1",
     "typescript": "^7.0.2",
-    "vitest": "^5.1.0",
-    "wrangler": "^4.143.0"
+    "vitest": "^5.1.1",
+    "wrangler": "^4.165.0"
   },
   "dependencies": {
     "@prisma/adapter-d1": "^7.10.1",
